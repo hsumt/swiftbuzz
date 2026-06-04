@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Awana Buzzer Timer</title>
+    </head>
+    <body>
+        <h1>Awana Buzzer Timer</h1>
+        
+        <button id="btnConnect">Connect to Arduino</button>
+        <button id="btnReset">Reset Round</button>
+        <button id="btnQuestion">Start Question</button>
+        <button id="btnStop">Stop Timer</button>        
+
+        <div id="scoreboard"></div>
+        <div id="questionTime"></div>
+
+        <script>
+            
+            let port = null;
+            let locked = false;
+            let buzzers = [];
+            let questionStartTime = null;
+            let questionInterval = null;
+            
+            document.getElementById('btnConnect').addEventListener('click', async () => {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                document.getElementById('btnConnect').textContent = 'Connected!';
+                readSerial();
+            });
+
+            document.getElementById('btnReset').addEventListener('click', async () => {
+                if (!port) { alert('Connect to Arduino first!'); return; }
+                const writer = port.writable.getWriter();
+                await writer.write(new TextEncoder().encode('R'));
+                writer.releaseLock();
+            });
+
+            document.getElementById('btnQuestion').addEventListener('click', async () => {
+                console.log('button clicked', questionStartTime, questionInterval);
+                clearInterval(questionInterval);
+                questionStartTime = Date.now();
+                
+                questionInterval = setInterval(() => {
+                    const elapsed = ((Date.now() - questionStartTime) / 1000).toFixed(2);
+                    document.getElementById('questionTime').textContent = `Question time: ${elapsed}s`;
+                }, 50);
+
+                if (port) {
+                    const writer = port.writable.getWriter();
+                    await writer.write(new TextEncoder().encode('Q'));
+                    writer.releaseLock();
+                }
+            });
+
+            document.getElementById('btnStop').addEventListener('click', () => {
+                questionStartTime = null;
+                clearInterval(questionInterval);
+                questionStartTime = null;
+                document.getElementById('questionTime').textContent = 'Timer stopped';
+            });
+
+            async function readSerial() {
+                const decoder = new TextDecoderStream();
+                port.readable.pipeTo(decoder.writable);
+                const reader = decoder.readable.getReader();
+                
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += value;
+
+                    let lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    lines.forEach(line => {
+                        line = line.trim();
+                        if (line) parseLine(line);
+                    });
+                }
+            }
+
+            function parseLine(line) {
+                console.log(line);
+
+                if (line.startsWith('BUZZ,')) {
+                    if (locked) return;
+                    const parts = line.split(',');
+                    const buzzerNum = parseInt(parts[1]);
+                    const microseconds = parseInt(parts[2]);
+                    const milliseconds = parseFloat((microseconds / 1000).toFixed(2));
+                    buzzers.push({ num: buzzerNum, ms: milliseconds });
+                    buzzers.sort((a, b) => a.ms - b.ms);
+                    renderScoreboard();
+                }
+
+                if (line === 'RESET! Ready for next round!') {
+                    buzzers = [];
+                    locked = false;
+                    renderScoreboard();
+                    document.getElementById('questionTime').textContent = '';
+                    questionStartTime = null;
+                    clearInterval(questionInterval);
+                }
+
+                if (line === 'LOCKED') {
+                    locked = true;
+                }
+
+                if (line.startsWith('QUESTION_TIME,')) {
+                    const ms = parseInt(line.split(',')[1]);
+                    clearInterval(questionInterval);
+                    document.getElementById('questionTime').textContent = 
+                        `First buzz: ${(ms / 1000).toFixed(2)}s after question`;
+                }
+            }
+
+            function renderScoreboard() {
+                const sb = document.getElementById('scoreboard');
+                sb.innerHTML = '';
+
+                buzzers.forEach((b, i) => {
+                    const div = document.createElement('div');
+                    div.textContent = `${i + 1}. Buzzer ${b.num} - ${b.ms}ms`;
+                    sb.appendChild(div);
+                });
+            }
+        </script>
+    </body>
+</html>
