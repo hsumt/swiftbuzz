@@ -1,0 +1,4 @@
+Install Adafruit SSD1306 and Adafruit GFX
+Arduino IDE
+Chrome/Edge
+The parts
