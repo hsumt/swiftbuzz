@@ -1,7 +1,4 @@
-For a GitHub README, I'd cut a lot of the explanatory text and focus on **what it does, how to wire it, how to use it, and how to expand it**. People reading GitHub generally want to get it running quickly.
-
----
-
+https://docs.google.com/document/d/e/2PACX-1vSE1X3inybETFW6bcxJyrkRjBECvuXUSWEriFJHz58BMzkm-Ny_3w0cbavtWdUfDjhPFHPW-Zip6t80/pub
 # AWANA Electronic Quizzing System Interface
 
 A custom Arduino Mega + web application interface for the AWANA Electronic Quizzing System (EQS). The system captures buzzer presses, records reaction times, ranks contestants, and displays results on both a browser-based scoreboard and an OLED display.
