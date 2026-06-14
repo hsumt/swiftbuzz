@@ -28,7 +28,7 @@
     }
 
     /*  Left/Right Ribbon borders  */
-    body::before, body::after {
+    body::before {
       content: '';
       position: fixed;
       top: 0; bottom: 0;
@@ -41,6 +41,18 @@
       z-index: 100;
     }
     body::before { left: 0; }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; bottom: 0;
+      width: 12px;
+      background: linear-gradient(
+        90deg,
+        var(--gold)      50%,
+        var(--red)     50%
+      );
+      z-index: 100;
+    }
     body::after  { right: 0; }
 
     /*  Top ribbon bar  */
@@ -49,7 +61,10 @@
       background: linear-gradient(90deg,
         var(--red) 0%, var(--gold) 25%,
         var(--red) 50%, var(--gold) 75%, var(--red) 100%);
-      margin: 0 18px;
+      /* margin: 0 18px; */
+      position: relative;
+      z-index: 101;
+    
     }
 
     .page-wrapper {
@@ -359,7 +374,7 @@
       background: linear-gradient(90deg,
         var(--gold) 0%, var(--red) 25%,
         var(--gold) 50%, var(--red) 75%, var(--gold) 100%);
-      margin: 0 18px;
+      /* margin: 0 18px; */
       position: fixed;
       bottom: 0;
       left: 0; right: 0;
